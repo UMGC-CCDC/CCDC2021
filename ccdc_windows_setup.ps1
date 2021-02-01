@@ -42,6 +42,8 @@ Add-ADGroupMember -Identity "Schema Admins" "mgallahan "
 ## Firewall
 
 # Backup old firewall policy, just in case
+netsh advfirewall export C:\firewall_policy_backup.wfw
+
 
 # Flush old firewall
 
@@ -53,6 +55,7 @@ wmic path win32_networkadapter where PhysicalAdapter=True call enable
 ## Fetch tools if we don't already have them
 # bluespawn
 # sysinternals
+     # sysmon
 # nmap
 # AV
 
