@@ -10,8 +10,11 @@ wmic path win32_networkadapter where PhysicalAdapter=True call disable
 
 ## Change passwords
 
-# Change local accounts
-
+# Change local account passwords
+# Get-LocalUser doesn't exist in Win2008 :(
+# haven't had luck with WMIC
+# wmic useraccount get name
+# wmic useraccount where "LocalAccount=True" get Name
 
 # Change domain admins
 $newSecurePassword = ConvertTo-SecureString "you should change this P@ssw0rd" -AsPlainText -Force
@@ -47,4 +50,5 @@ wmic path win32_networkadapter where PhysicalAdapter=True call enable
 ## Enable logging
 
 ## Start Monitoring windows (netstat or whatevs)
+#  while ($true) {Get-NetTCPConnection -State Established; sleep 4 | Sort-Object LocalPort | Format-Table -AutoSize}
 
