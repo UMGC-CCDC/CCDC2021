@@ -9,7 +9,42 @@
 wmic path win32_networkadapter where PhysicalAdapter=True call disable
 
 ## Change passwords
+
+# Change local accounts
+
+
+# Change domain admins
 $newSecurePassword = ConvertTo-SecureString "you should change this P@ssw0rd" -AsPlainText -Force
 ForEach ($user in (Get-ADGroupMember "Domain Admins").name) {
 Set-ADAccountPassword -Identity "$user" -NewPassword $newSecurePassword -Reset
 }
+
+# Change local accounts
+
+## Firewall
+
+# Backup old firewall policy, just in case
+
+# Flush old firewall
+
+# Create new firewall rules
+
+## Enable adapters
+wmic path win32_networkadapter where PhysicalAdapter=True call enable
+
+## Fetch tools if we don't already have them
+# bluespawn
+# sysinternals
+# nmap
+# AV
+
+## Backup windows binaries
+
+## Integrity checks
+
+## Start Bluespawn
+
+## Enable logging
+
+## Start Monitoring windows (netstat or whatevs)
+
