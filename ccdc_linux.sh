@@ -17,33 +17,37 @@ new_password=''
 target_user=''
 new_interface_setting='down'
 user=''
+port=''
 
-while getopts ':p:ahq:fi:u:vbB' option; do
+while getopts ':p:ahq:f:i:u:vbB' option; do
   case "$option" in
 	'p')
-	    set_passwords='true'
-	    new_password=${OPTARG}
-	    ;;
-    	'a') auto_secure='true';;
-    	'h') show_help='true';;
+		set_passwords='true'
+		new_password=${OPTARG}
+		;;
+    	'a') 	auto_secure='true';;
+    	'h') 	show_help='true';;
     	'q')
-	    quarantine='true'
-	    target_user=${OPTARG}
-	    ;;
-    	'f') lock_firewall='true';;
+		quarantine='true'
+		target_user=${OPTARG}
+		;;
+    	'f') 
+		lock_firewall='true'
+		port=${OPTARG}
+		;;
     	'i') 
-	    set_interfaces='true'
-	    new_interface_setting=${OPTARG}
-	    ;;
+		set_interfaces='true'
+		new_interface_setting=${OPTARG}
+		;;
 	'u')
-	    new_user='true'
-	    input=($OPTARG)
-	    user=${input[0]}
-	    new_password=${input[1]}
-	    ;;
-	'v') validate_checksums='true';;
-	'b') backup_binaries='true';;
-	'B') reset_binaries='true';;
+		new_user='true'
+		input=($OPTARG)
+		user=${input[0]}
+		new_password=${input[1]}
+		;;
+	'v') 	validate_checksums='true';;
+	'b') 	backup_binaries='true';;
+	'B') 	reset_binaries='true';;
   esac
 done
 
@@ -60,7 +64,8 @@ if [ "$show_help" = true ]; then
     echo '    -a auto_secure         Default initial securing of the system'
     echo '    -h show_help           This'
     echo '    -q quarantine          Kills a user'\'s' processes and archives their files in /home'
-    echo '    -f lock_firewall       completely locks down the firewall, all services will be affected'
+    echo '    -f lock_firewall       accepts argument "lock" to completely lock down the firewall'
+    echo '			     also accepts port number to open a specific port.'
     echo '    -i set_interfaces      quickly sets all interfaces up/down'
     echo '    -u new_user            adds a new user with provided password'
     echo '    -v validate_checksums  Check to make sure checksums of critical files haven'\''t changed'
@@ -77,6 +82,8 @@ if [ "$show_help" = true ]; then
     echo '		sudo bash ccdc_linux.sh -q username'
     echo '		sudo bash ccdc_linux.sh -i down'
     echo '		sudo bash ccdc_linux.sh -u "username password" -- Quotes required'
+    echo '		sudo bash ccdc_linux.sh -f lock		       -- Locks down the firewall'
+    echo '		sudo bash ccdc_linux.sh -f 80		       -- Opens port 80'
     
     
 fi
@@ -89,22 +96,22 @@ BLUE=`tput bold && tput setaf 4`
 NC=`tput sgr0`
 
 function RED(){
-	echo -e "\n${RED}${1}${NC}"
+	echo -e "${RED}${1}${NC}"
 }
 function GREEN(){
-	echo -e "\n${GREEN}${1}${NC}"
+	echo -e "${GREEN}${1}${NC}"
 }
 function YELLOW(){
-	echo -e "\n${YELLOW}${1}${NC}"
+	echo -e "${YELLOW}${1}${NC}"
 }
 function BLUE(){
-	echo -e "\n${BLUE}${1}${NC}"
+	echo -e "${BLUE}${1}${NC}"
 }
 
 # Testing if root...
 if [ $UID -ne 0 ]
 then
-	RED "You must run this script as root!" && echo
+	RED "You must run this script as root!"
 	exit
 fi
 
@@ -129,11 +136,14 @@ if [ "$auto_secure" = true ]; then
 	# Capture initial checksum of critical files
 	sudo bash ccdc_linux.sh -v 
 
-	# Leave the user looking at /etc/passwd
-	ip addr
-	sudo cat /etc/passwd
+	# Secure firewall then open 22 so we can reconnect
+	sudo bash ccdc_linux.sh -f lock
+	sudo bash ccdc_linux.sh -f 22
+
+	# Bring interfaces back up
+	sudo bash ccdc_linux.sh -i up
+
 	GREEN "Auto-Secure actions complete..."
-	GREEN "A good next step would be to identify/remove suspicous or unused users..."
 
 fi
 
@@ -153,34 +163,102 @@ if [ "$quarantine" = true ]; then
 	BLUE "Killing all of $target_user's processes..."
 	pkill -9 -u `id -u $target_user`
 
-	BLUE "Quarantining $target_user's files in /home/$target_user.tgz..." && echo
-	echo 'making a folder to put the loot in...'
+	BLUE "Quarantining $target_user's files in /home/$target_user.tgz..."
+	BLUE 'making a folder to put the loot in...'
 	mkdir /home/$target_user
 	chown root:root /home/$target_user
-	echo 'searching the filesystem for files owned by the user and moving them to the loot folder...'
+	BLUE 'searching the filesystem for files owned by the user and moving them to the loot folder...'
 	find / 2>/dev/null -type f -user $target_user -exec mv '{}' /home/$target_user \;
 	find / 2>/dev/null -type d -user $target_user -delete
-	echo 'archiving the loot folder...'
+	BLUE 'archiving the loot folder...'
         tar -czvf /home/$target_user.tgz /home/$target_user
-	echo 'removing the unarchived loot folder...'
         rm -r /home/$target_user
+	GREEN "$target_user has been quarantined.."
 
 fi
 
 # Completely lock down the firewall, this will interrupt all services
 if [ "$lock_firewall" = true ]; then
 
-	BLUE "Firewall locked down, all network traffic will be stopped..."
-	iptables -F
-	iptables -P INPUT DROP
-	iptables -P OUTPUT DROP
-	iptables -P FORWARD DROP
+	if [ "$port" = 'lock' ]; then
+
+		# disable firewalld or ufw
+		BLUE 'Killing firewalld and ufw so we can manage iptables directly...'
+		sudo systemctl stop firewalld 2>/dev/null
+		sudo ufw disable 2>/dev/null
+
+		# flush existing rules
+		sudo ip6tables -F
+		sudo iptables -F
+		
+		# set default policy to DROP for IPv6
+		sudo ip6tables -P INPUT DROP
+		sudo ip6tables -P OUTPUT DROP
+		sudo ip6tables -P FORWARD DROP
+
+		# set default policy to DROP for IPv4
+		sudo iptables -P INPUT DROP
+		sudo iptables -P OUTPUT DROP
+		sudo iptables -P FORWARD DROP
+
+		# allow connections that our machine requested
+		sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+		# allow certain types of icmp
+		sudo iptables -A INPUT -m conntrack -p icmp --icmp-type 3 --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+		sudo iptables -A INPUT -m conntrack -p icmp --icmp-type 11 --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+		sudo iptables -A INPUT -m conntrack -p icmp --icmp-type 12 --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+		
+		# allow the loopback mostly for hostname resoulution
+		sudo iptables -I INPUT 1 -i lo -j ACCEPT
+
+		GREEN "Firewall locked down, all network traffic will be stopped..."
+	fi
+
+	# logic to toggle outgoing traffic
+	if [ "$port" = 'out' ]; then
+		if [ "$(sudo iptables -L | grep OUTPUT | cut -d" " -f4 | cut -d")" -f1)" = DROP ]; then
+			sudo iptables -P OUTPUT ACCEPT
+			GREEN "Outgoing traffic permitted..."
+		else
+			sudo iptables -P OUTPUT DROP
+			GREEN "Outgoing traffic denied..."
+		fi
+
+	fi
+
+	if [ "$port" != 'lock' ] && [ "$port" != 'out' ]; then
+
+		# ensure valid port number
+		if ! [[ "$port" =~ ^[0-9]+$ ]]; then
+        		RED "Invalid port number, entry must be an integer, i.e.:"
+			RED "	sudo bash ccdc_linux.sh -f 80"
+			exit 1
+		fi
+
+
+		# DNS is special because it needs UDP too...
+		if [ "$port" = 53 ]; then
+			sudo iptables -A INPUT -p tcp --dport 53 -j ACCEPT
+			sudo iptables -A INPUT -p udp --dport 53 -j ACCEPT
+			sudo iptables -A OUTPUT -p tcp --sport 53 -j ACCEPT
+			sudo iptables -A OUTPUT -p udp --sport 53 -j ACCEPT
+		fi
+		
+		# Handle all other ports
+		if [ "$port" != 53 ]; then
+			sudo iptables -A INPUT -p tcp --dport $port -j ACCEPT
+			sudo iptables -A OUTPUT -p tcp --sport $port -j ACCEPT
+		fi
+
+		GREEN "Port $port opened..."
+	fi
 fi
 
 # Set all interfaces either up or down
 if [ "$set_interfaces" = true ]; then
 
-	BLUE "Setting all interfaces '$new_interface_setting'"
+	GREEN "Setting all interfaces '$new_interface_setting'"
 	for interface in $(ip a | grep mtu | cut -d":" -f2)
 	do
 		sudo ip link set $interface $new_interface_setting
@@ -192,9 +270,9 @@ if [ "$new_user" = true ]; then
 	
 	BLUE "Created user: '$user' with password: '$new_password'..."
 	sudo useradd $user
-	sudo usermod -aG wheel $user
-	sudo usermod -aG sudo $user
-	sudo usermod -aG root $user
+	sudo usermod -aG wheel $user 2>/dev/null
+	sudo usermod -aG sudo $user 2>/dev/null
+	sudo usermod -aG root $user 2>/dev/null
 	echo $user:$new_password | sudo chpasswd
 fi
 
@@ -206,8 +284,7 @@ if [ "$validate_checksums" = true ]; then
 	else
 		BLUE "Capturing initial checksums of critical files..."
 	fi
-	echo
-	BLUE "The reference checksums are always stored at /root/reference_checksums" && echo
+	BLUE "The reference checksums are always stored at /root/reference_checksums"
 
 	# add critical files or directories to be checked here using absolute paths
 	# wrapped in quotes and separated by a single space
@@ -221,24 +298,24 @@ if [ "$validate_checksums" = true ]; then
 		done
 	done
 	if test -f /root/reference_checksums; then
-		RED "Checking for differences..." && echo
+		BLUE "Checking for differences..."
 		diff -qs /root/reference_checksums current_checksums
 		diff -y --suppress-common-lines /root/reference_checksums current_checksums
 		rm current_checksums
 	else
 		mv current_checksums /root/reference_checksums
-		GREEN "Successfully stashed the reference checksums in /root/reference_checksums" && echo
+		GREEN "Successfully stashed the reference checksums in /root/reference_checksums"
 	fi
 fi
 
 if [ "$backup_binaries" = true ]; then
 	BLUE "Backing up binaries..." 
-	BLUE "This could take a minute or so..." && echo
+	BLUE "This could take a minute or so..."
 	sudo mkdir /tmp/bin
 	IFS=:
 	for directory in $PATH;
 	do
-		sudo cp -r $directory/* /tmp/bin
+		sudo cp -r $directory/* /tmp/bin 2>/dev/null
 	done
 	
 	tar czf /tmp/bin.tar.gz /tmp/bin
@@ -248,7 +325,7 @@ if [ "$backup_binaries" = true ]; then
 fi
 
 if [ "$reset_binaries" = true ]; then
-	BLUE "Resetting binaries from backup..." && echo
+	BLUE "Resetting binaries from backup..."
 	if test ! -f /tmp/bin.enc; then
 		RED 'No backup binaries found...'
 		RED 'This script looks for /tmp/bin.enc'
