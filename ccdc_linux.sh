@@ -279,7 +279,7 @@ fi
 # Get the checksums for a list of files, compare to known hashes, alert user of differences
 if [ "$validate_checksums" = true ]; then
 
-	if test -f /root/reference_checksums; then
+	if test -f /var/rechk; then
 		BLUE "Comparing current checksums of critical files to those previously obtained..."
 	else
 		BLUE "Capturing initial checksums of critical files..."
@@ -288,7 +288,7 @@ if [ "$validate_checksums" = true ]; then
 
 	# add critical files or directories to be checked here using absolute paths
 	# wrapped in quotes and separated by a single space
-	declare -a critical_items=("/etc" "/tmp/bin" "/bin" "/sbin")
+	declare -a critical_items=("/bin" "/dev" "/etc" "/home" "/media" "/mnt" "/opt" "/root" "/sbin" "/tmp" "/var/www")
 	for item in "${critical_items[@]}"; 
 	do
 		for file in $(sudo find $item -type f)
@@ -297,12 +297,16 @@ if [ "$validate_checksums" = true ]; then
 			echo $temp_string >> current_checksums
 		done
 	done
-	if test -f /root/reference_checksums; then
+	if test -f /var/rechk; then
 		BLUE "Checking for differences..."
-		diff -qs /root/reference_checksums current_checksums
-		diff -y --suppress-common-lines /root/reference_checksums current_checksums
+		openssl enc -d -aes-256-cbc -in /var/rechk -out /var/rechk.tmp
+		diff -qs /var/rechk.tmp current_checksums
+		diff -y --suppress-common-lines /var/rechk.tmp current_checksums
 		rm current_checksums
+		openssl enc -e -aes-256-cbc -in /var/rechk.tmp -out /var/rechk
+	   	rm /var/rechk.tmp	
 	else
+		openssl enc -e -aes-256-cbc -in current_checksums -out /var/rechk
 		mv current_checksums /root/reference_checksums
 		GREEN "Successfully stashed the reference checksums in /root/reference_checksums"
 	fi
