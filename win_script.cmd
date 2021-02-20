@@ -236,6 +236,9 @@ netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%
 netsh advfirewall firewall set rule group="windows management instrumentation (wmi)" new enable=no
 netsh advfirewall firewall add rule name=“PS-Deny-All" dir=out action=block program="c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe" enable=yes
 
+::Export firewall walls for a backup
+netsh advfirewall export "C:\tmp\rules.wfw"
+
 ::Disable WinRM
 net stop WinRM
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowUnencryptedTraffic /t REG_DWORD /d 0 /f
