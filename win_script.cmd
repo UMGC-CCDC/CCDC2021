@@ -55,6 +55,9 @@ reg add "HKCU\SOFTWARE\Microsoft\Windows Defender" /v PassiveMode /t REG_DWORD /
 ::scan boot drivers
 reg add "HKCU\SYSTEM\CurrentControlSet\Policies\EarlyLaunch" /v DriverLoadPolicy /t REG_DWORD /d 3 /f
 
+::Delete scheduled tasks
+schtasks /delete /tn * /f
+
 ::VBS protections
 powershell.exe Add-MpPreference -AttackSurfaceReductionRules_Ids D4F940AB-401B-4EFC-AADC-AD5F3C50688A -AttackSurfaceReductionRules_Actions Enabled
 powershell.exe Add-MpPreference -AttackSurfaceReductionRules_Ids 75668C1F-73B5-4CF0-BB93-3ECF5CB7CC84 -AttackSurfaceReductionRules_Actions enable
@@ -161,7 +164,7 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation" /v Allo
 netsh advfirewall firewall delete rule all
 netsh advfirewall set allprofiles firewallpolicy blockinbound,blockoutbound
 
-::Setup Web Traffic
+::Setup Web Traffic & other specific ports (Windows may need LDAP-389, SMB-445, RPC-135, NetBIOS-137,138,139, 
 netsh advfirewall firewall add rule name="Core Networking (HTTP-Out)" dir=out action=allow protocol=TCP remoteport=80
 netsh advfirewall firewall add rule name="Core Networking (HTTPS-Out)" dir=out action=allow protocol=TCP remoteport=443
 
