@@ -103,6 +103,7 @@ reg add "HKLM\System\CurrentControlSet\Services\LanmanServer\Parameters" /v "Req
 reg add "HKLM\System\CurrentControlSet\Services\LanmanServer\Parameters" /v "EnableSecuritySignature" /t REG_DWORD /d 1 /f
 reg add "HKLM\System\CurrentControlSet\Services\NTDS\Parameters" /v "LDAPServerIntegrity" /t REG_DWORD /d 2 /f
 reg add "HKLM\System\CurrentControlSet\Services\ldap" /v "LDAPClientIntegrity " /t REG_DWORD /d 1 /f
+BCDEDIT /set nointegritychecks OFF
 
 ::prevent guest SMB logins
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\LanmanWorkstation" /v AllowInsecureGuestAuth /t REG_DWORD /d 0 /f
@@ -196,8 +197,35 @@ netsh advfirewall firewall add rule name="Block scriptrunner.exe netconns" progr
 netsh advfirewall firewall add rule name="Block SyncAppvPublishingServer.exe netconns" program="%systemroot%\SysWOW64\SyncAppvPublishingServer.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block wmic.exe netconns" program="%systemroot%\SysWOW64\wbem\wmic.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%systemroot%\SysWOW64\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
-netsh advfirewall set publicprofile firewallpolicy blockinboundalways,allowoutbound
+netsh advfirewall firewall set rule group="windows management instrumentation (wmi)" new enable=no
 
+::Disable WinRM
+net stop WinRM
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowUnencryptedTraffic /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client" /v AllowDigest /t REG_DWORD /d 0 /f
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Schedule" /v DisableRpcOverTcp /t REG_DWORD /d 1 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control" /v DisableRemoteScmEndpoints /t REG_DWORD /d 1 /f
 
+::Enable advanced logging
+wevtutil sl Security /ms:1024000
+wevtutil sl Application /ms:1024000
+wevtutil sl System /ms:1024000
+wevtutil sl "Windows Powershell" /ms:1024000
+wevtutil sl "Microsoft-Windows-PowerShell/Operational" /ms:1024000
+Auditpol /set /subcategory:"Security Group Management" /success:enable /failure:enable
+Auditpol /set /subcategory:"Process Creation" /success:enable /failure:enable
+Auditpol /set /subcategory:"Logoff" /success:enable /failure:disable
+Auditpol /set /subcategory:"Logon" /success:enable /failure:enable 
+Auditpol /set /subcategory:"Filtering Platform Connection" /success:enable /failure:disable
+Auditpol /set /subcategory:"Removable Storage" /success:enable /failure:enable
+Auditpol /set /subcategory:"SAM" /success:disable /failure:disable
+Auditpol /set /subcategory:"Filtering Platform Policy Change" /success:disable /failure:disable
+Auditpol /set /subcategory:"IPsec Driver" /success:enable /failure:enable
+Auditpol /set /subcategory:"Security State Change" /success:enable /failure:enable
+Auditpol /set /subcategory:"Security System Extension" /success:enable /failure:enable
+Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 
-
+::Disable IPv6
+netsh interface teredo set state disable
+netsh interface 6to4 set state disabled
+netsh interface isatap set state disabled
