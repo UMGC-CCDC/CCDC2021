@@ -229,3 +229,6 @@ Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 netsh interface teredo set state disable
 netsh interface 6to4 set state disabled
 netsh interface isatap set state disabled
+
+::Turn off wmi
+net stop wmimgmt
