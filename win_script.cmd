@@ -229,3 +229,6 @@ Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 netsh interface teredo set state disable
 netsh interface 6to4 set state disabled
 netsh interface isatap set state disabled
+
+powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/ION28/BLUESPAWN/releases/download/v0.5.0-alpha/BLUESPAWN-client-x64.exe','C:\tmp\BLUESPAWN-client-x64.exe')"
+(new-object System.Net.WebClient).DownloadFile('https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/raw/master/winPEAS/winPEASexe/binaries/x64/Release/winPEASx64.exe','C:\tmp\winpeas.exe')
