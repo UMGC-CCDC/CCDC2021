@@ -119,7 +119,21 @@ fi
 if [ "$auto_secure" = true ]; then
 
 	BLUE "Performing the scripted default actions to secure the system..."
-	
+
+	# Handle ssh
+	BLUE "Killing ssh-keygen and removing keys..."
+	find / 2>/dev/null -type d | grep /.ssh | xargs rm -rf
+	rm -rf $(which ssh-keygen)
+	BLUE "Checking if alternate ssh key files have been configured..."
+	RED $(grep -rnw /etc/ssh -e AuthorizedKeysFile | grep -v '#')
+	echo
+
+	# Check for issues with passwd, shadow, and shell files
+	BLUE "Checking for users set up for no password login (missing 'x' in /etc/passwd)... "
+	RED $(cat /etc/passwd | cut -d: -f1,2 | grep -v x | cut -d":" -f1) && echo
+	BLUE "Listing all user accounts with passwords set, none should be services..."
+	RED $(cat /etc/shadow | grep '\$' | cut -d":" -f1) && echo
+
 	# Bring down all network interfaces
 	sudo bash ccdc_linux.sh -i down
 
