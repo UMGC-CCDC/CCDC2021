@@ -40,6 +40,24 @@ NetSh Advfirewall set allprofiles state on
 Write-Output "## Most recent firewall rule"
 netsh advfirewall firewall show rule name=all | select -First 15
 
+# Check for recently created users
+$time =  ((Get-Date).AddSeconds(-10))
+$filename = Get-Date -Format yyyy.MM.dd
+$exportcsv="c:\tmp\ad_users_creators" + $filename + ".csv"
+Get-WinEvent -FilterHashtable @{LogName="Security";ID=4720;StartTime=$Time}| Foreach {
+$event = [xml]$_.ToXml()
+if($event)
+{
+$Time = Get-Date $_.TimeCreated -UFormat "%Y-%m-%d %H:%M:%S"
+$CreatorUser = $event.Event.EventData.Data[4]."#text"
+$NewUser = $event.Event.EventData.Data[0]."#text"
+$comp = $event.Event.System.computer
+$dc + "|" + $Time + "|" + $NewUser + "|" + $CreatorUser| out-file $exportcsv -append
+}
+}
+
+
+
 # Last 5 login events
 Write-Output "## Last 5 login events"
 Get-WinEvent -MaxEvents 5 -FilterHashtable @{logname='security';id='4624'} |
