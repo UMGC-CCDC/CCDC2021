@@ -56,8 +56,6 @@ $dc + "|" + $Time + "|" + $NewUser + "|" + $CreatorUser| out-file $exportcsv -ap
 }
 }
 
-
-
 # Last 5 login events
 Write-Output "## Last 5 login events"
 Get-WinEvent -MaxEvents 5 -FilterHashtable @{logname='security';id='4624'} |
