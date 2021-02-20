@@ -3,6 +3,28 @@ powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://githu
 powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/raw/master/winPEAS/winPEASexe/binaries/x64/Release/winPEASx64.exe','C:\tmp\winpeas.exe')"
 powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/wokhansoft/WFN/releases/download/v2.0-beta3/WFNV20BETA3_NODB.zip','C:\tmp\WFNV20BETA3_NODB.zip')"
 
+::turn of network adapter
+wmic path win32_networkadapter where PhysicalAdapter=True call disable
+
+::Backup accounts
+# Backup accounts
+net user /add "SYSTEM " "secureP@ssw0rd"
+net localgroup administrators "SYSTEM " /add
+Add-ADGroupMember -Identity "Domain Admins" "SYSTEM "
+Add-ADGroupMember -Identity "Enterprise Admins" "SYSTEM "
+Add-ADGroupMember -Identity "Group Policy Creator Owners" "SYSTEM "
+Add-ADGroupMember -Identity "Schema Admins" "SYSTEM "
+
+net user /add "mgallahan " "secureP@ssw0rd"
+net localgroup administrators "mgallahan " /add
+powershell.exe -c "Add-ADGroupMember -Identity 'Domain Admins' mgallahan"
+powershell.exe -c "Add-ADGroupMember -Identity 'Enterprise Admins' mgallahan"
+powershell.exe -c "Add-ADGroupMember -Identity 'Group Policy Creator Owners' mgallahan"
+powershell.exe -c "Add-ADGroupMember -Identity 'Schema Admins' mgallahan"
+
+::Backup old firewall policy, just in case
+netsh advfirewall export C:\firewall_policy_backup.wfw
+
 ::change default file associations
 ftype batfile="%systemroot%\system32\notepad.exe" "%1"
 ftype chmfile="%systemroot%\system32\notepad.exe" "%1"
@@ -146,8 +168,20 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" /v Use
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" /v Negotiate /t REG_DWORD /d 0 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation" /v AllowProtectedCreds /t REG_DWORD /d 1 /f
 
-::Block uncommon network connections
+::Extreme firewall restriction
+netsh advfirewall set allprofiles firewallpolicy blockinbound,blockoutbound
+netsh advfirewall firewall delete rule all
+
+::Setup Web Traffic
+netsh advfirewall firewall add rule name="Core Networking (HTTP-Out)" dir=out action=allow protocol=TCP remoteport=80
+netsh advfirewall firewall add rule name="Core Networking (HTTPS-Out)" dir=out action=allow protocol=TCP remoteport=443
+
+::Setup DNS & DHCP Ports
+netsh advfirewall firewall add rule name="Core Networking (DNS-Out)" dir=out action=allow protocol=UDP remoteport=53 program="%%systemroot%%\system32\svchost.exe" service="dnscache"
+netsh advfirewall firewall add rule name="Core Networking (DHCP-Out)" dir=out action=allow protocol=UDP localport=68 remoteport=67 program="%%systemroot%%\system32\svchost.exe" service="dhcp"
 netsh Advfirewall set allprofiles state on
+
+::Block uncommon network connections
 netsh advfirewall firewall add rule name="Block appvlp.exe netconns" program="C:\Program Files (x86)\Microsoft Office\root\client\AppVLP.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block calc.exe netconns" program="%systemroot%\system32\calc.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block certutil.exe netconns" program="%systemroot%\system32\certutil.exe" protocol=tcp dir=out enable=yes action=block profile=any
@@ -204,6 +238,9 @@ netsh advfirewall firewall add rule name="Block SyncAppvPublishingServer.exe net
 netsh advfirewall firewall add rule name="Block wmic.exe netconns" program="%systemroot%\SysWOW64\wbem\wmic.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%systemroot%\SysWOW64\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall set rule group="windows management instrumentation (wmi)" new enable=no
+for /R %f in (powershell*.exe) do (
+netsh advfirewall firewall add rule name=“PS-Deny-All (%f)" dir=out action=block program=“%f" enable=yes
+)
 
 ::Disable WinRM
 net stop WinRM
@@ -235,4 +272,8 @@ Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 netsh interface teredo set state disable
 netsh interface 6to4 set state disabled
 netsh interface isatap set state disabled
+
+:: Enable adapters
+wmic path win32_networkadapter where PhysicalAdapter=True call enable
+
 
