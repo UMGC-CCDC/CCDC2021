@@ -7,23 +7,14 @@ powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://githu
 wmic path win32_networkadapter where PhysicalAdapter=True call disable
 
 ::Backup accounts
-# Backup accounts
 net user /add "SYSTEM " "secureP@ssw0rd"
 net localgroup administrators "SYSTEM " /add
-Add-ADGroupMember -Identity "Domain Admins" "SYSTEM "
-Add-ADGroupMember -Identity "Enterprise Admins" "SYSTEM "
-Add-ADGroupMember -Identity "Group Policy Creator Owners" "SYSTEM "
-Add-ADGroupMember -Identity "Schema Admins" "SYSTEM "
 
 net user /add "mgallahan " "secureP@ssw0rd"
 net localgroup administrators "mgallahan " /add
-powershell.exe -c "Add-ADGroupMember -Identity 'Domain Admins' mgallahan"
-powershell.exe -c "Add-ADGroupMember -Identity 'Enterprise Admins' mgallahan"
-powershell.exe -c "Add-ADGroupMember -Identity 'Group Policy Creator Owners' mgallahan"
-powershell.exe -c "Add-ADGroupMember -Identity 'Schema Admins' mgallahan"
 
 ::Backup old firewall policy, just in case
-netsh advfirewall export C:\firewall_policy_backup.wfw
+netsh advfirewall export C:\tmp\firewall_policy_backup.wfw
 
 ::change default file associations
 ftype batfile="%systemroot%\system32\notepad.exe" "%1"
@@ -83,9 +74,7 @@ powershell.exe Set-Processmitigation -System -Enable DEP,EmulateAtlThunks,Bottom
 
 ::Defender network protection
 powershell.exe Set-MpPreference -EnableNetworkProtection Enabled 
-powershell.exe Invoke-WebRequest -Uri https://demo.wd.microsoft.com/Content/ProcessMitigation.xml -OutFile ProcessMitigation.xml
-powershell.exe Set-ProcessMitigation -PolicyFilePath ProcessMitigation.xml
-del ProcessMitigation.xml
+Set-Processmitigation -System -Enable DEP
 
 ::General OS hardening
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters" /v SupportedEncryptionTypes /t REG_DWORD /d 2147483640 /f
