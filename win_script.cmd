@@ -1,6 +1,7 @@
-
+mkdir c:\tmp
 powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/ION28/BLUESPAWN/releases/download/v0.5.0-alpha/BLUESPAWN-client-x64.exe','C:\tmp\BLUESPAWN-client-x64.exe')"
 powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/raw/master/winPEAS/winPEASexe/binaries/x64/Release/winPEASx64.exe','C:\tmp\winpeas.exe')"
+powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/wokhansoft/WFN/releases/download/v2.0-beta3/WFNV20BETA3_NODB.zip','C:\tmp\WFNV20BETA3_NODB.zip')"
 
 ::change default file associations
 ftype batfile="%systemroot%\system32\notepad.exe" "%1"
