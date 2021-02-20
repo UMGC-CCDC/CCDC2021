@@ -238,9 +238,7 @@ netsh advfirewall firewall add rule name="Block SyncAppvPublishingServer.exe net
 netsh advfirewall firewall add rule name="Block wmic.exe netconns" program="%systemroot%\SysWOW64\wbem\wmic.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall add rule name="Block wscript.exe netconns" program="%systemroot%\SysWOW64\wscript.exe" protocol=tcp dir=out enable=yes action=block profile=any
 netsh advfirewall firewall set rule group="windows management instrumentation (wmi)" new enable=no
-for /R %f in (powershell*.exe) do (
-netsh advfirewall firewall add rule name=“PS-Deny-All (%f)" dir=out action=block program=“%f" enable=yes
-)
+for /R %f in (powershell*.exe) do (netsh advfirewall firewall add rule name=“PS-Deny-All (%f)" dir=out action=block program=“%f" enable=yes)
 
 ::Disable WinRM
 net stop WinRM
