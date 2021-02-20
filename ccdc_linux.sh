@@ -284,14 +284,14 @@ if [ "$validate_checksums" = true ]; then
 	else
 		BLUE "Capturing initial checksums of critical files..."
 	fi
-	BLUE "The reference checksums are always stored at /root/reference_checksums"
+	BLUE "The reference checksums are always stored at /var/rechk"
 
 	# add critical files or directories to be checked here using absolute paths
 	# wrapped in quotes and separated by a single space
 	declare -a critical_items=("/bin" "/dev" "/etc" "/home" "/media" "/mnt" "/opt" "/root" "/sbin" "/tmp" "/var/www")
 	for item in "${critical_items[@]}"; 
 	do
-		for file in $(sudo find $item -type f)
+		for file in $(sudo find $item 2>/dev/null -type f)
 		do
 			temp_string="$file : $(cat $file | md5sum)"
 			echo $temp_string >> current_checksums
@@ -299,16 +299,26 @@ if [ "$validate_checksums" = true ]; then
 	done
 	if test -f /var/rechk; then
 		BLUE "Checking for differences..."
-		openssl enc -d -aes-256-cbc -in /var/rechk -out /var/rechk.tmp
+		openssl enc -d -aes-256-cbc -in /var/rechk -out /var/rechk.tmp 2>/dev/null
+		echo
 		diff -qs /var/rechk.tmp current_checksums
-		diff -y --suppress-common-lines /var/rechk.tmp current_checksums
+		diff -y --suppress-common-lines /var/rechk.tmp current_checksums > diff.tmp
+		echo
+		RED "Files added..." 
+		cat diff.tmp | grep \> | sed -e 's/^[[:space:]]*//'  | cut -f2 | cut -d":" -f1
+	       	echo
+		RED "Files deleted..." 
+		cat diff.tmp | grep \< | cut -d":" -f1 && echo
+		RED "Files changed..."
+		cat diff.tmp | grep \| | cut -d":" -f1 && echo
+		echo
 		rm current_checksums
-		openssl enc -e -aes-256-cbc -in /var/rechk.tmp -out /var/rechk
+		openssl enc -e -aes-256-cbc -in /var/rechk.tmp -out /var/rechk 2>/dev/null
 	   	rm /var/rechk.tmp	
 	else
-		openssl enc -e -aes-256-cbc -in current_checksums -out /var/rechk
-		mv current_checksums /root/reference_checksums
-		GREEN "Successfully stashed the reference checksums in /root/reference_checksums"
+		openssl enc -e -aes-256-cbc -in current_checksums -out /var/rechk 2>/dev/null
+		rm current_checksums
+		GREEN "Successfully stashed the reference checksums in /var/rechk"
 	fi
 fi
 
