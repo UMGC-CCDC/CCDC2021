@@ -10,7 +10,6 @@ $filewatcher.EnableRaisingEvents = $true
 $writeaction = { $path = $Event.SourceEventArgs.FullPath
             $changeType = $Event.SourceEventArgs.ChangeType
             $logline = "$(Get-Date), $changeType, $path"
-            Select-String -NotMatch "C:\tmp\FileWatcher_log.txt"
             Add-content "C:\tmp\FileWatcher_log.txt" -value $logline
           }    
 Register-ObjectEvent $filewatcher "Created" -Action $writeaction
