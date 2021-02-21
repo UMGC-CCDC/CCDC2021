@@ -14,7 +14,7 @@ net user /add "mgallahan " "secureP@ssw0rd"
 net localgroup administrators "mgallahan " /add
 
 ::Backup old firewall policy, just in case
-netsh advfirewall export C:\tmp\firewall_policy_backup.wfw
+netsh advfirewall export C:\tmp\firewall_default_backup.wfw
 
 ::change default file associations
 ftype batfile="%systemroot%\system32\notepad.exe" "%1"
