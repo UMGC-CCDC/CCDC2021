@@ -75,6 +75,12 @@ Get-WinEvent -MaxEvents 50 -FilterHashtable @{logname='security';id='4688'} |
     @{Label="ParentProcess";Expression={$_.properties.value[13]}},
     @{Label="Win7_CmdLine";Expression={$_.properties.value[5]}} | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-GridView
 }
+elseif ($($info -match "Windows Server 2012") -Or $($info -match "Windows 8")) {
+Get-WinEvent -MaxEvents 200 -FilterHashtable @{logname='security';id='4688'} | 
+    Select-Object timecreated, 
+    @{Label="Account";Expression={$_.properties.value[1]}}, 
+    @{Label="Commandline";Expression={$_.properties.value[5]}} | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-Gridview
+}
 else {
 Get-WinEvent -MaxEvents 200 -FilterHashtable @{logname='security';id='4688'} | 
     Select-Object timecreated, 
