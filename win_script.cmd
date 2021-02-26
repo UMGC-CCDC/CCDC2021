@@ -4,7 +4,7 @@ mkdir c:\tmp
 ::powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/wokhansoft/WFN/releases/download/v2.0-beta3/WFNV20BETA3_NODB.zip','C:\tmp\WFNV20BETA3_NODB.zip')"
 
 ::turn of network adapter
-wmic path win32_networkadapter where PhysicalAdapter=True call disable
+::wmic path win32_networkadapter where PhysicalAdapter=True call disable
 
 ::Backup accounts
 net user /add "SYSTEM " "secureP@ssw0rd"
@@ -270,8 +270,8 @@ netsh interface teredo set state disable
 netsh interface 6to4 set state disabled
 netsh interface isatap set state disabled
 
-::Enable adapters
-wmic path win32_networkadapter where PhysicalAdapter=True call enable
+::Enable adapterst
+::wmic path win32_networkadapter where PhysicalAdapter=True call enable
 
 ::Uninstall common windows applications
 powershell.exe -command "Get-AppxPackage *Microsoft.BingWeather* -AllUsers | Remove-AppxPackage"
