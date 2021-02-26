@@ -1,4 +1,13 @@
 mkdir c:\tmp
+
+::Download bluespawn and Windows Active Response script. Run them in seperate windows.
+
+powershell.exe -c invoke-webrequest um.mba/bluespawn.exe -outfile bluespawn.exe
+START /D %cd% powershell.exe -c .\bluespawn.exe --hunt Normal --log=console,xml
+powershell.exe -c invoke-webrequest um.mba/war.ps1 -outfile war.ps1
+START /D %cd% powershell.exe -ep bypass -noexit .\war.ps1
+
+
 ::powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/ION28/BLUESPAWN/releases/download/v0.5.0-alpha/BLUESPAWN-client-x64.exe','C:\tmp\BLUESPAWN-client-x64.exe')"
 ::powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/raw/master/winPEAS/winPEASexe/binaries/x64/Release/winPEASx64.exe','C:\tmp\winpeas.exe')"
 ::powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/wokhansoft/WFN/releases/download/v2.0-beta3/WFNV20BETA3_NODB.zip','C:\tmp\WFNV20BETA3_NODB.zip')"
