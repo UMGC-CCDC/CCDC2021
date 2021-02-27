@@ -1,3 +1,5 @@
+# Windows Active Response (WAR)
+
 $info = systeminfo | findstr /B /C:"OS Name" /B /C:"OS Version"
 
 # Selectively check the logging
@@ -27,6 +29,7 @@ AUDITPOL /SET /SUBCATEGORY:"Other Object Access Events" /SUCCESS:enable /FAILURE
 AUDITPOL /SET /SUBCATEGORY:"User Account Management" /SUCCESS:enable /FAILURE:enable
 AUDITPOL /SET /SUBCATEGORY:"Security Group Management" /SUCCESS:enable /FAILURE:enable
 AUDITPOL /SET /SUBCATEGORY:"Security System Extension" /SUCCESS:enable /FAILURE:enable
+reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit\ /v ProcessCreationIncludeCmdLine_Enabled /t REG_DWORD /d 1
 
 # Check the firewall status
 
@@ -73,20 +76,20 @@ Get-WinEvent -MaxEvents 50 -FilterHashtable @{logname='security';id='4688'} |
     @{Label="Account";Expression={$_.properties.value[1]}}, 
     @{Label="Commandline";Expression={$_.properties.value[8]}}, 
     @{Label="ParentProcess";Expression={$_.properties.value[13]}},
-    @{Label="Win7_CmdLine";Expression={$_.properties.value[5]}} | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-GridView
+    @{Label="Win7_CmdLine";Expression={$_.properties.value[5]}} | Format-Table -AutoSize | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-GridView
 }
 elseif ($($info -match "Windows Server 2012") -Or $($info -match "Windows 8")) {
 Get-WinEvent -MaxEvents 50 -FilterHashtable @{logname='security';id='4688'} | 
     Select-Object timecreated, 
     @{Label="Account";Expression={$_.properties.value[1]}}, 
-    @{Label="Commandline";Expression={$_.properties.value[5]}} | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-Gridview
+    @{Label="Commandline";Expression={$_.properties.value[8]}} | Format-Table -AutoSize | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-Gridview
 }
 else {
 Get-WinEvent -MaxEvents 100 -FilterHashtable @{logname='security';id='4688'} | 
     Select-Object timecreated, 
     @{Label="Account";Expression={$_.properties.value[1]}}, 
     @{Label="Commandline";Expression={$_.properties.value[8]}}, 
-    @{Label="ParentProcess";Expression={$_.properties.value[13]}} | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-Gridview
+    @{Label="ParentProcess";Expression={$_.properties.value[13]}} | Format-Table -AutoSize | findstr /i "TimeCreated cmd powershell wmic net.exe net1.exe netsh sc.exe schtasks wscript cscript dllhost regsvr32 certutil rundll rundll32 wmic http wevtutil" #| Out-Gridview
 }
 
 # Netstat
