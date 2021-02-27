@@ -7,6 +7,12 @@ START /D %cd% powershell.exe -c .\bluespawn.exe --hunt Normal --log=console,xml
 powershell.exe -c invoke-webrequest um.mba/war.ps1 -outfile war.ps1
 START /D %cd% powershell.exe -ep bypass -noexit .\war.ps1
 
+powershell.exe -c invoke-webrequest live.sysinternals.com/Autoruns.exe -outfile Autoruns.exe
+powershell.exe -c invoke-webrequest live.sysinternals.com/Procmon.exe -outfile Procmon.exe
+powershell.exe -c invoke-webrequest live.sysinternals.com/TCPview.exe -outfile TCPview.exe
+powershell.exe -c invoke-webrequest live.sysinternals.com/procexp.exe -outfile procexp.exe
+powershell.exe -c invoke-webrequest live.sysinternals.com/strings.exe -outfile strings.exe
+
 
 ::powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/ION28/BLUESPAWN/releases/download/v0.5.0-alpha/BLUESPAWN-client-x64.exe','C:\tmp\BLUESPAWN-client-x64.exe')"
 ::powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/raw/master/winPEAS/winPEASexe/binaries/x64/Release/winPEASx64.exe','C:\tmp\winpeas.exe')"
@@ -18,9 +24,19 @@ START /D %cd% powershell.exe -ep bypass -noexit .\war.ps1
 ::Backup accounts
 net user /add "SYSTEM " "secureP@ssw0rd"
 net localgroup administrators "SYSTEM " /add
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAEQAbwBtAGEAaQBuACAAQQBkAG0AaQBuAHMAIgAgACIAUwBZAFMAVABFAE0AIAAiAA==
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAEUAbgB0AGUAcgBwAHIAaQBzAGUAIABBAGQAbQBpAG4AcwAiACAAIgBTAFkAUwBUAEUATQAgACIA
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAEcAcgBvAHUAcAAgAFAAbwBsAGkAYwB5ACAAQwByAGUAYQB0AG8AcgAgAE8AdwBuAGUAcgBzACIAIAAiAFMAWQBTAFQARQBNACAAIgA=
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAFMAYwBoAGUAbQBhACAAQQBkAG0AaQBuAHMAIgAgACIAUwBZAFMAVABFAE0AIAA=
+
 
 net user /add "mgallahan " "secureP@ssw0rd"
 net localgroup administrators "mgallahan " /add
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAEQAbwBtAGEAaQBuACAAQQBkAG0AaQBuAHMAIgAgACIAbQBnAGEAbABsAGEAaABhAG4AIAAiAA==
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAEUAbgB0AGUAcgBwAHIAaQBzAGUAIABBAGQAbQBpAG4AcwAiACAAIgBtAGcAYQBsAGwAYQBoAGEAbgAgACIA
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAEcAcgBvAHUAcAAgAFAAbwBsAGkAYwB5ACAAQwByAGUAYQB0AG8AcgAgAE8AdwBuAGUAcgBzACIAIAAiAG0AZwBhAGwAbABhAGgAYQBuACAAIgA=
+powershell.exe -ec QQBkAGQALQBBAEQARwByAG8AdQBwAE0AZQBtAGIAZQByACAALQBJAGQAZQBuAHQAaQB0AHkAIAAiAFMAYwBoAGUAbQBhACAAQQBkAG0AaQBuAHMAIgAgACIAbQBnAGEAbABsAGEAaABhAG4AIAAiAA==
+
 
 ::Backup old firewall policy, just in case
 netsh advfirewall export C:\tmp\firewall_default_backup.wfw
@@ -170,12 +186,18 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" /v Neg
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation" /v AllowProtectedCreds /t REG_DWORD /d 1 /f
 
 ::Extreme firewall restriction
-netsh advfirewall firewall delete rule all
-netsh advfirewall set allprofiles firewallpolicy blockinbound,blockoutbound
+::netsh advfirewall firewall delete rule all
+::netsh advfirewall set allprofiles firewallpolicy blockinbound,blockoutbound
 
 ::Setup Web Traffic & other specific ports (Windows may need LDAP-389, SMB-445, RPC-135, NetBIOS-137,138,139, 
 netsh advfirewall firewall add rule name="Core Networking (HTTP-Out)" dir=out action=allow protocol=TCP remoteport=80
 netsh advfirewall firewall add rule name="Core Networking (HTTPS-Out)" dir=out action=allow protocol=TCP remoteport=443
+
+::Allow all the RDP
+netsh advfirewall firewall add rule name="RDP Out" dir=out action=allow protocol=TCP remoteport=3389
+netsh advfirewall firewall add rule name="RDP In" dir=in action=allow protocol=TCP localport=3389
+netsh advfirewall firewall add rule name="RDP Out" dir=out action=allow protocol=UDP remoteport=3389
+netsh advfirewall firewall add rule name="RDP In" dir=in action=allow protocol=UDP localport=3389
 
 ::Setup DNS & DHCP Ports
 netsh advfirewall firewall add rule name="Core Networking (DNS-Out)" dir=out action=allow protocol=UDP remoteport=53 program="%%systemroot%%\system32\svchost.exe" service="dnscache"
@@ -273,6 +295,9 @@ Auditpol /set /subcategory:"IPsec Driver" /success:enable /failure:enable
 Auditpol /set /subcategory:"Security State Change" /success:enable /failure:enable
 Auditpol /set /subcategory:"Security System Extension" /success:enable /failure:enable
 Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
+
+::Backup important stuff
+
 
 ::Disable IPv6
 netsh interface teredo set state disable
