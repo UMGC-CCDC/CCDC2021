@@ -13,6 +13,10 @@ powershell.exe -c invoke-webrequest live.sysinternals.com/Procmon.exe -outfile P
 powershell.exe -c invoke-webrequest live.sysinternals.com/TCPview.exe -outfile TCPview.exe
 powershell.exe -c invoke-webrequest live.sysinternals.com/procexp.exe -outfile procexp.exe
 powershell.exe -c invoke-webrequest live.sysinternals.com/strings.exe -outfile strings.exe
+powershell.exe -c invoke-webrequest http://wsus.ds.download.windowsupdate.com/c/msdownload/update/software/crup/2015/02/scepinstall_230274d8b20bbe30fb94a287fd82670af0309ea4.exe -outfile scepinstall.exe
+
+
+::START /D %cd% scep.exe
 
 
 ::powershell.exe -c "(new-object System.Net.WebClient).DownloadFile('https://github.com/ION28/BLUESPAWN/releases/download/v0.5.0-alpha/BLUESPAWN-client-x64.exe','C:\tmp\BLUESPAWN-client-x64.exe')"
