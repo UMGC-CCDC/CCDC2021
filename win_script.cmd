@@ -4,7 +4,7 @@ mkdir c:\tmp\backups
 ::Download bluespawn and Windows Active Response script. Run them in seperate windows.
 
 powershell.exe -c invoke-webrequest um.mba/bluespawn.exe -outfile bluespawn.exe
-START /D %cd% powershell.exe -c .\bluespawn.exe --hunt Normal --log=console,xml
+START /D %cd% powershell.exe -noexit -c .\bluespawn.exe --hunt Normal --log=console,xml
 powershell.exe -c invoke-webrequest um.mba/war.ps1 -outfile war.ps1
 START /D %cd% powershell.exe -ep bypass -noexit .\war.ps1
 
@@ -403,4 +403,3 @@ powershell.exe -command "Get-AppxProvisionedPackage -Online | Where-Object {$_.D
 powershell.exe -command "Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -eq 'Microsoft.YourPhone'} | Remove-AppxProvisionedPackage -Online"
 powershell.exe -command "Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -eq 'Microsoft.ZuneMusic'} | Remove-AppxProvisionedPackage -Online"
 powershell.exe -command "Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -eq 'Microsoft.ZuneVideo'} | Remove-AppxProvisionedPackage -Online"
-
