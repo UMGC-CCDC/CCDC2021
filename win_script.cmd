@@ -1,4 +1,5 @@
 mkdir c:\tmp
+mkdir c:\tmp\backups
 
 ::Download bluespawn and Windows Active Response script. Run them in seperate windows.
 
@@ -296,7 +297,6 @@ Auditpol /set /subcategory:"Security State Change" /success:enable /failure:enab
 Auditpol /set /subcategory:"Security System Extension" /success:enable /failure:enable
 Auditpol /set /subcategory:"System Integrity" /success:enable /failure:enable
 
-::Backup important stuff
 
 
 ::Disable IPv6
@@ -306,6 +306,32 @@ netsh interface isatap set state disabled
 
 ::Enable adapterst
 ::wmic path win32_networkadapter where PhysicalAdapter=True call enable
+
+::Backup important stuff
+
+::Backup binaries
+copy C:\Windows\System32\auditpol.exe C:\tmp\backups\
+copy C:\Windows\System32\cacls.exe C:\tmp\backups
+copy C:\Windows\System32\cmd.exe C:\tmp\backups
+copy C:\Windows\System32\conhost.exe C:\tmp\backups
+copy C:\Windows\System32\eventvwr.exe C:\tmp\backups
+copy C:\Windows\System32\findstr.exe C:\tmp\backups
+copy C:\Windows\System32\icacls.exe C:\tmp\backups
+copy C:\Windows\System32\lsass.exe C:\tmp\backups
+copy C:\Windows\System32\mmc.exe C:\tmp\backups
+copy C:\Windows\System32\net.exe C:\tmp\backups
+copy C:\Windows\System32\net1.exe C:\tmp\backups
+copy C:\Windows\System32\netsh.exe C:\tmp\backups
+copy C:\Windows\System32\netstat.exe C:\tmp\backups
+copy C:\Windows\System32\notepad.exe C:\tmp\backups
+copy C:\Windows\System32\powershell.exe C:\tmp\backups
+copy C:\Windows\System32\regedit.exe C:\tmp\backups
+copy C:\Windows\System32\systeminfo.exe C:\tmp\backups
+copy C:\Windows\System32\Taskmgr.exe C:\tmp\backups
+copy C:\Windows\System32\wevtutil.exe C:\tmp\backups
+
+::Backup GPO
+powershell.exe -c Backup-GPO -All -Path "C:\tmp\backups"
 
 ::Uninstall common windows applications
 powershell.exe -command "Get-AppxPackage *Microsoft.BingWeather* -AllUsers | Remove-AppxPackage"
